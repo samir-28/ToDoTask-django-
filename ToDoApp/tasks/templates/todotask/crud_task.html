@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do Task App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 20px;
+            font-size: 2.5rem;
+        }
+
+        .task-form {
+            width: 80%;
+            max-width: 600px;
+            padding: 20px;
+            background-color: #ffffff;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            color:rgb(255, 255, 255); 
+            background-color:rgb(27, 114, 21);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .task-list {
+            width: 80%;
+            max-width: 600px;
+            margin-top: 30px;
+        }
+
+        .task-item {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .task-info {
+            flex-grow: 1;
+            text-align: left;
+            padding-right: 10px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .task-actions button {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            border: none;
+        }
+
+        .edit {
+            background-color: rgb(7, 48, 255);
+        }
+
+        .edit:hover {
+            background-color: rgb(0, 112, 224);
+        }
+
+        .delete {
+            background-color: rgb(216, 25, 25);
+        }
+
+        .delete:hover {
+            background-color: rgb(219, 27, 46);
+        }
+
+        .created-date {
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 5px;
+        }
+        /* Modal Overlay */
+.view-more-modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Modal Content */
+.view-more-modal-content {
+    background: white;
+    padding: 20px;
+    width: 40%;
+    margin: auto;
+    border-radius: 10px;
+    text-align: center;
+    position: relative;
+}
+
+/* Close Button */
+.close-view-more {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+/* View More Button */
+.viewMoreBtn {
+    padding: 8px 15px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-radius: 5px;
+    
+}
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Overlay background */
+}
+
+.modal:target {
+    display: block; /* Show modal when it is targeted */
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    width: 50%;
+    margin: 10% auto;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.close-btn {
+    float: right;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+#taskTitle, #taskDescription {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+button[type="submit"] {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+    </style>
+</head>
+<body>
+
+<h1>To-Do Task App</h1>
+<h2> Welcome {{request.session.username}} !</h2>
+<!-- Task Input Form -->
+<div class="task-form">
+    <form action="/task/crud/" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <input type="text" name="task_name" placeholder="Enter task name" required>
+        </div>
+
+        <div class="form-group">
+            <input type="text" name="task_description" placeholder="Enter task description" required>
+        </div>
+        <button>Add Task</button>
+    </form>
+</div>
+
+<!-- Task List (Fetched from the Database) -->
+<div class="task-list">
+    {% for each in data %}
+    <div class="task-item" data-task-id="{{ each.id }}">
+        <div class="task-info">
+            <strong>Task Name:</strong> {{each.title }} <br>
+            <strong>Description:</strong> {{each.description }}<br>
+            <strong>Created At:</strong> {{each.created_at }}
+        </div>
+        <div class="task-actions">
+            <!-- Button to Open the Modal -->
+            <button class="openPopup" data-target="#taskModal-{{ each.id }}">Edit</button> 
+            <form action="/task/delete/{{each.id}}/" method="POST">
+                {% csrf_token %}
+                <button class="delete">Delete</button>
+            </form>
+            <button class="viewMoreBtn" data-target="viewMoreModal-{{ each.id }}">View more</button>
+        </div>
+    </div>
+    {% endfor %} 
+</div>
+
+<!-- Pop up Modal Structure for Each Task to Edit -->
+{% for each in data %}
+<div id="taskModal-{{ each.id }}" class="modal">
+    <div class="modal-content">
+        <button class="close-btn" data-target="#taskModal-{{ each.id }}">&times;</button>
+        <h2>Edit Task</h2>
+        <form id="editForm-{{ each.id }}" action="/task/update/" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="task_id" value = {{each.id}}>
+            <label for="taskTitle">Task Title:</label><br>
+            <input type="text" id="taskTitle-{{ each.id }}" name="task_name_updated" value="{{ each.title }}" required><br><br>
+
+            <label for="taskDescription">Description:</label><br>
+            <input type="text" id="taskDescription-{{ each.id }}" name="task_description_updated" required value="{{ each.description }}"><br><br>
+            <input type="hidden" id="createdAt-{{ each.id }}" name="created_at" value="{{ each.created_at }}"><br><br>
+            <button type="submit">Save Changes</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+{% comment %} View more btn {% endcomment %}
+
+{% for task in data %}
+
+    <!-- View More Modal -->
+    <div id="viewMoreModal-{{ task.id }}" class="view-more-modal">
+        <div class="view-more-modal-content">
+            <button class="close-view-more" data-target="viewMoreModal-{{ task.id }}">&times;</button>
+            <h2>Task Details</h2>
+            <p><strong>Title:</strong> {{ task.title }}</p>
+            <p><strong>Description:</strong> {{ task.description }}</p>
+            <p><strong>ID:</strong> {{ task.id }}</p>
+        </div>
+    </div>
+{% endfor %}
+
+<!-- JavaScript for Handling Modal Behavior -->
+<script>
+document.querySelectorAll('.viewMoreBtn').forEach(button => {
+    button.addEventListener('click', function() {
+        const targetModal = document.getElementById(this.getAttribute('data-target'));
+        targetModal.style.display = "flex"; // Show the modal
+    });
+});
+
+document.querySelectorAll('.close-view-more').forEach(button => {
+    button.addEventListener('click', function() {
+        const targetModal = document.getElementById(this.getAttribute('data-target'));
+        targetModal.style.display = "none"; // Hide the modal
+    });
+});
+
+// Close modal if user clicks outside the content box
+window.addEventListener('click', function(event) {
+    document.querySelectorAll('.view-more-modal').forEach(modal => {
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    });
+});
+document.querySelectorAll('.openPopup').forEach(button => {
+    button.addEventListener('click', function() {
+        const targetModal = this.getAttribute('data-target');
+        window.location.hash = targetModal; // Open the modal using :target
+    });
+});
+
+// Close Modal
+document.querySelectorAll('.close-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const targetModal = this.getAttribute('data-target');
+        window.location.hash = ''; // Close the modal by removing the hash
+    });
+});
+</script>
+</body>
+</html>
