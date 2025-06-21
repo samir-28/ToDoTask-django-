@@ -1,53 +1,43 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import User
-# Create your views here.
+from django.contrib.auth.hashers import make_password, check_password
 
-# Create your views here.
-""" from django.http import HttpResponse
-
-def home(request):
-    return HttpResponse("Welcome to my blog!") """
-
+# Register view
 def register(request):
-    
     if request.method == 'GET':
-        print("Do nothing")
-        # data={'welcome':"Welcome Samir!Register your data"}
-        return render(request,'user/register.html')
-         # return HttpResponse("Get method called")
-    
+        return render(request, 'user/register.html')
+
     else:
-        print(request.POST)
-        print("Do Register")
-        # data={'welcome':"Welcome Samir! Login your data"}
-        user_name=request.POST.get('name')
-        user_email=request.POST.get('email')
-        user_password=request.POST.get('password')
-        user=User.objects.create(name=user_name,email=user_email,password=user_password)
+        user_name = request.POST.get('name')
+        user_email = request.POST.get('email')
+        user_password = request.POST.get('password')
+        hashed_password = make_password(user_password)
+
+        user = User.objects.create(
+            name=user_name,
+            email=user_email,
+            password=hashed_password
+        )
         return redirect('/user/login/')
-    
+
+# Login view
 def login(request):
     if request.method == 'GET':
-        # data={'welcome':"Welcome Samir! Login your data"}
-        return render(request,'user/login.html')
-    
+        return render(request, 'user/login.html')
+
     else:
-        print(request.POST)
-        user_email=request.POST.get('email')
-        user_password=request.POST.get('password')
+        user_email = request.POST.get('email')
+        user_password = request.POST.get('password')
+
         try:
-            user=User.objects.get(email= user_email,password=user_password)
-            request.session['useremail']=user_email
-            request.session['username']=user.name
-            return redirect('/task/crud/')
-        
-        except:
-            print("not available")
-            return HttpResponse("Login Failed")
-    
-        return HttpResponse("Login Successful")
-    
-        # return render(request,'user/login.html',data)
-        #return HttpResponse("Post method called")
-        
+            user = User.objects.get(email=user_email)
+            if check_password(user_password, user.password):
+                request.session['useremail'] = user.email
+                request.session['username'] = user.name
+                return redirect('/task/crud/')
+            else:
+                return HttpResponse("Invalid password")
+
+        except User.DoesNotExist:
+            return HttpResponse("User does not exist")
